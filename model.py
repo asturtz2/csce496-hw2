@@ -33,8 +33,9 @@ def model_conv_2(x):
 		pool_1 = tf.layers.max_pooling2d(hidden_1, 2, 2, padding='same')
 		hidden_2 = tf.layers.conv2d(pool_1, 128, 3, padding='same', activation=tf.nn.relu, name='hidden_2')
 		pool_2 = tf.layers.max_pooling2d(hidden_2, 2, 2, padding='same')
-		flat_conv = tf.reshape(pool_2, [-1, 32*32*64])
-		dens1 = tf.layers.dense(flat_conv, 128)
+		flat_conv = tf.reshape(pool_2, [-1, 139392])
+		#print(pool_2.get_shape().as_list())
+		dens1 = tf.layers.dense(flat_conv, 64)
 		output = tf.layers.dense(dens1, 7)
 	return output
 
