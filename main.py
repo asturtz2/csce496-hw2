@@ -86,8 +86,8 @@ def main(argv):
 				ce_vals = []
 				print('I am here!')
 				for i in range(train_num_examples // batch_size):
-						batch_xs = train_images[i*batch_size:(i+1)*batch_size, :]
-						batch_ys = train_labels[i*batch_size:(i+1)*batch_size, :]
+					batch_xs = train_images[i*batch_size:(i+1)*batch_size, :]
+					batch_ys = train_labels[i*batch_size:(i+1)*batch_size, :]
 					_, train_ce = session.run([train_op, total_loss], {input_placeholder: batch_xs, y: batch_ys})
 					ce_vals.append(train_ce)
 
@@ -111,9 +111,9 @@ def main(argv):
 
 				ce_vals_v = []
 				conf_mxs_v = []
-					for i in range(test_set_num_examples // batch_size):
-						batch_xsv = test_images[i*batch_size:(i+1)*batch_size, :]
-						batch_ysv = test_labels[i*batch_size:(i+1)*batch_size, :]
+				for i in range(test_set_num_examples // batch_size):
+					batch_xsv = test_images[i*batch_size:(i+1)*batch_size, :]
+					batch_ysv = test_labels[i*batch_size:(i+1)*batch_size, :]
 					test_cev, conf_matrix_v, _ = session.run([total_loss, confusion_matrix_op, output], {input_placeholder: batch_xsv, y: batch_ysv})
 					ce_vals_v.append(test_cev)
 					conf_mxs_v.append(conf_matrix_v)
