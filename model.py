@@ -1,19 +1,46 @@
 import tensorflow as tf
 
 def regularizer():
-    return tf.contrib.layers.l2_regularizer(scale=1.0)
+	return tf.contrib.layers.l2_regularizer(scale=1.0)
 
 def dense_layer(x, layer_name, size, regularize = True):
-    return tf.layers.dense(
-        x,
-        size,
-        kernel_regularizer = regularizer() if regularize else None,
-        bias_regularizer   = regularizer() if regularize else None,
-        activation         = tf.nn.relu,
-        name               = layer_name
-    )
+	return tf.layers.dense(
+		x,
+		size,
+		kernel_regularizer = regularizer() if regularize else None,
+		bias_regularizer   = regularizer() if regularize else None,
+		activation         = tf.nn.relu,
+		name               = layer_name
+	)
+def my_conv_block(inputs, filters, is_training):
+	"""
+	Args:
+		- inputs: 4D tensor of shape NHWC
+		- filters: iterable of ints
+	"""
+	with tf.name_scope('conv_block') as scope:
+		x = inputs
+		for i in range(len(filters)):
+			x = tf.layers.conv2d(x, filters[0], 3, 1, padding='same')
+			x = tf.layers.batch_normalization(x, training=is_training)
+			x = tf.nn.elu(x)
+			x = tf.layers.max_pooling2d(x, 2, 2, padding='same')
+	return x
 
-#Rewrites
+def model_conv_2(x):
+	with tf.name_scope('Conv_model') as scope:
+		hidden_1 = tf.layers.conv2d(x, 64, 3, padding='same', activation=tf.nn.relu, name='hidden_1')
+		pool_1 = tf.layers.max_pooling2d(hidden_1, 2, 2, padding='same')
+		hidden_2 = tf.layers.conv2d(pool_1, 128, 3, padding='same', activation=tf.nn.relu, name='hidden_2')
+		pool_2 = tf.layers.max_pooling2d(hidden_2, 2, 2, padding='same')
+		flat_conv = tf.reshape(pool_2, [-1, 32*32*64])
+		dens1 = tf.layers.dense(flat_conv, 128)
+		output = tf.layers.dense(dens1, 7)
+	return output
+
+
+'''
+# Rewrites
 # def model_1(x):
 #     with tf.name_scope('linear_model'):
 #         hidden_1 = dense_layer(x, 'hidden_layer_1', 256, False)
@@ -79,195 +106,195 @@ def dense_layer(x, layer_name, size, regularize = True):
 
 
 def model_1(x):
-    x = x / 255.0
-    with tf.name_scope('linear_model') as scope:
-        hidden_1 = tf.layers.dense(
-            x,
-            256,
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        hidden_2 = tf.layers.dense(
-            hidden_1,
-            128,
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        output = tf.layers.dense(
-            hidden_2,
-            10,
-            name='class_layer')
-        return output
+	x = x / 255.0
+	with tf.name_scope('linear_model') as scope:
+		hidden_1 = tf.layers.dense(
+			x,
+			256,
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		hidden_2 = tf.layers.dense(
+			hidden_1,
+			128,
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		output = tf.layers.dense(
+			hidden_2,
+			10,
+			name='class_layer')
+		return output
 
 def model_2(x):
-    with tf.name_scope('linear_model') as scope:
-        hidden_1 = tf.layers.dense(
-            x,
-            512,
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        hidden_2 = tf.layers.dense(
-            hidden_1,
-            256,
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        output = tf.layers.dense(
-            hidden_2,
-            10,
-            name='class_layer')
-        return output
+	with tf.name_scope('linear_model') as scope:
+		hidden_1 = tf.layers.dense(
+			x,
+			512,
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		hidden_2 = tf.layers.dense(
+			hidden_1,
+			256,
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		output = tf.layers.dense(
+			hidden_2,
+			10,
+			name='class_layer')
+		return output
 
 def model_3(x):
-    x = x / 255.0
-    with tf.name_scope('linear_model') as scope:
-        hidden_1 = tf.layers.dense(
-            x,
-            256,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        hidden_2 = tf.layers.dense(
-            hidden_1,
-            128,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        output = tf.layers.dense(
-            hidden_2,
-            10,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            name='class_layer')
-        return output
+	x = x / 255.0
+	with tf.name_scope('linear_model') as scope:
+		hidden_1 = tf.layers.dense(
+			x,
+			256,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		hidden_2 = tf.layers.dense(
+			hidden_1,
+			128,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		output = tf.layers.dense(
+			hidden_2,
+			10,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			name='class_layer')
+		return output
 
 def model_4(x):
-    x = x / 255.0
-    with tf.name_scope('linear_model') as scope:
-        hidden_1 = tf.layers.dense(
-            x,
-            512,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        hidden_2 = tf.layers.dense(
-            hidden_1,
-            256,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        output = tf.layers.dense(
-            hidden_2,
-            10,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            name='class_layer')
-        return output
+	x = x / 255.0
+	with tf.name_scope('linear_model') as scope:
+		hidden_1 = tf.layers.dense(
+			x,
+			512,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		hidden_2 = tf.layers.dense(
+			hidden_1,
+			256,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		output = tf.layers.dense(
+			hidden_2,
+			10,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			name='class_layer')
+		return output
 
 def model_5(x):
-    x = x / 255.0
-    KEEP_PROB=0.7
-    with tf.name_scope('linear_model') as scope:
-        dropped_input = tf.layers.dropout(x, KEEP_PROB)
-        hidden_1 = tf.layers.dense(
-            dropped_input,
-            256,
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
-        hidden_2 = tf.layers.dense(
-            dropped_hidden_1,
-            128,
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
-        output = tf.layers.dense(
-            dropped_hidden_2,
-            10,
-            name='output_layer')
-        return output
+	x = x / 255.0
+	KEEP_PROB=0.7
+	with tf.name_scope('linear_model') as scope:
+		dropped_input = tf.layers.dropout(x, KEEP_PROB)
+		hidden_1 = tf.layers.dense(
+			dropped_input,
+			256,
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
+		hidden_2 = tf.layers.dense(
+			dropped_hidden_1,
+			128,
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
+		output = tf.layers.dense(
+			dropped_hidden_2,
+			10,
+			name='output_layer')
+		return output
 
 def model_6(x):
-    x = x / 255.0
-    KEEP_PROB=0.7
-    with tf.name_scope('linear_model') as scope:
-        dropped_input = tf.layers.dropout(x, KEEP_PROB)
-        hidden_1 = tf.layers.dense(
-            dropped_input,
-            512,
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
-        hidden_2 = tf.layers.dense(
-            dropped_hidden_1,
-            256,
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
-        output = tf.layers.dense(
-            dropped_hidden_2,
-            10,
-            name='output_layer')
-        return output
+	x = x / 255.0
+	KEEP_PROB=0.7
+	with tf.name_scope('linear_model') as scope:
+		dropped_input = tf.layers.dropout(x, KEEP_PROB)
+		hidden_1 = tf.layers.dense(
+			dropped_input,
+			512,
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
+		hidden_2 = tf.layers.dense(
+			dropped_hidden_1,
+			256,
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
+		output = tf.layers.dense(
+			dropped_hidden_2,
+			10,
+			name='output_layer')
+		return output
 
 def model_7(x):
-    x = x / 255.0
-    KEEP_PROB=0.7
-    with tf.name_scope('linear_model') as scope:
-        dropped_input = tf.layers.dropout(x, KEEP_PROB)
-        hidden_1 = tf.layers.dense(
-            dropped_input,
-            256,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
-        hidden_2 = tf.layers.dense(
-            dropped_hidden_1,
-            128,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
-        output = tf.layers.dense(
-            dropped_hidden_2,
-            10,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            name='output_layer')
-        return output
+	x = x / 255.0
+	KEEP_PROB=0.7
+	with tf.name_scope('linear_model') as scope:
+		dropped_input = tf.layers.dropout(x, KEEP_PROB)
+		hidden_1 = tf.layers.dense(
+			dropped_input,
+			256,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
+		hidden_2 = tf.layers.dense(
+			dropped_hidden_1,
+			128,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
+		output = tf.layers.dense(
+			dropped_hidden_2,
+			10,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			name='output_layer')
+		return output
 
 def model_8(x):
-    x = x / 255.0
-    KEEP_PROB=0.7
-    with tf.name_scope('linear_model') as scope:
-        dropped_input = tf.layers.dropout(x, KEEP_PROB)
-        hidden_1 = tf.layers.dense(
-            dropped_input,
-            512,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_1')
-        dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
-        hidden_2 = tf.layers.dense(
-            dropped_hidden_1,
-            256,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            activation=tf.nn.relu,
-            name='hidden_layer_2')
-        dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
-        output = tf.layers.dense(
-            dropped_hidden_2,
-            10,
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
-            name='output_layer')
-        return output
+	x = x / 255.0
+	KEEP_PROB=0.7
+	with tf.name_scope('linear_model') as scope:
+		dropped_input = tf.layers.dropout(x, KEEP_PROB)
+		hidden_1 = tf.layers.dense(
+			dropped_input,
+			512,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_1')
+		dropped_hidden_1 = tf.layers.dropout(hidden_1, KEEP_PROB)
+		hidden_2 = tf.layers.dense(
+			dropped_hidden_1,
+			256,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			activation=tf.nn.relu,
+			name='hidden_layer_2')
+		dropped_hidden_2 = tf.layers.dropout(hidden_2, KEEP_PROB)
+		output = tf.layers.dense(
+			dropped_hidden_2,
+			10,
+			kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			bias_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0),
+			name='output_layer')
+		return output
 
 
 # def model_4(x):
@@ -343,3 +370,4 @@ def model_8(x):
 #                              10,
 #                              name='output_layer')
 #         return output
+'''
