@@ -185,18 +185,26 @@ def main(argv):
                 conf_mxs_v.append(conf_matrix_v)
             avg_test_cev = sum(ce_vals_v) / len(ce_vals_v)
             print('VALIDATION CROSS ENTROPY: ' + str(avg_test_cev))
-            lossControl.append (avg_test_cev)
-            if epoch > 7 :
-                if (np.average(lossControl)+0.5*np.std(lossControl) < avg_test_cev):
-                    print('Early stopping happens at ' + str(epoch))
-                    print('the average+1std is: '+str(( np.average(lossControl)+np.std(lossControl))))
-                    path_prefix = saver.save(
-                        session,
-                        os.path.join(FLAGS.save_dir, argv[1], 'homework_1'),
-                        global_step=global_step_tensor
-                    )
-                    saver = tf.train.import_meta_graph(path_prefix + '.meta')
-                    break
+
+            earlyStoppingParam = 5
+
+            if epoch > earlyStoppingParam :
+                if len(lossControl) > earlyStoppingParam :
+                    lossControl.pop(0)
+                    lossControl.append(avg_test_cev)
+                    if (np.average(lossControl)+0.5*np.std(lossControl) < avg_test_cev):
+                        print('Early stopping happens at ' + str(epoch))
+                        print('the average+1std is: '+str(( np.average(lossControl)+np.std(lossControl))))
+                        path_prefix = saver.save(
+                            session,
+                            os.path.join(FLAGS.save_dir, argv[1], 'homework_1'),
+                            global_step=global_step_tensor
+                        )
+                        saver = tf.train.import_meta_graph(path_prefix + '.meta')
+                        break
+                else :
+                    lossControl.append(avg_test_cev)
+
             print('VALIDATION CONFUSION MATRIX:')
             confusion_sum = sum(conf_mxs_v)
             print(str(confusion_sum))
