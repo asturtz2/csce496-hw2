@@ -22,56 +22,51 @@ test_images_label = ['test_y_1.npy','test_y_2.npy','test_y_3.npy','test_y_4.npy'
 def main(argv):
     # load data
     Best_set = []
-    for i in range(4):
-        train_images = np.load(FLAGS.data_dir + train_images_name[i])
-        train_labels = np.load(FLAGS.data_dir + train_labels_label[i])
-        test_images = np.load(FLAGS.data_dir + test_images_name[i])
-        test_labels = np.load(FLAGS.data_dir + test_images_label[i])
-
-    # train_images, validation_images,
-
+    for j in range(4):
+        print('This is start')
+        train_images = np.load(FLAGS.data_dir + train_images_name[j])
+        train_labels = np.load(FLAGS.data_dir + train_labels_label[j])
+        test_images = np.load(FLAGS.data_dir + test_images_name[j])
+        test_labels = np.load(FLAGS.data_dir + test_images_label[j])
         test_set_num_examples =  test_images.shape[0]
         train_num_examples = train_images.shape[0]
         train_images = np.reshape(train_images,[-1,129,129,1])
         test_images = np.reshape(test_images,[-1,129,129,1])
-    #test_num_examples = test_images.shape[0]
-
-    # specify the network
         input_placeholder = tf.placeholder(tf.float32, [None, 16641],
             name='input_placeholder')
         input_placeholder = tf.reshape(input_placeholder,[-1,129,129,1])
         #output = models[argv[1]](input_placeholder) model_conv
         output = model.model_conv_2(input_placeholder)
         output = tf.identity(output, name = 'output')
-    # define classification loss
+        # define classification loss
         y = tf.placeholder(tf.float32, [None, 7], name='label')
-
-    #with tf.name_scope('cross_entropy') as scope:
+        #with tf.name_scope('cross_entropy') as scope:
         cross_entropy  = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=output)
-    #cross_entropy = tf.reduce_mean(cross_entropy)
-
+        #cross_entropy = tf.reduce_mean(cross_entropy)
         #if argv[1] in ['model_1', 'model_2', 'model_5', 'model_6']:
         #    total_loss = tf.reduce_mean(cross_entropy)
         #else:
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         reg_coeff = 0.0001
         total_loss = tf.reduce_mean(cross_entropy + reg_coeff * sum(regularization_losses))
-    # cross_entropy1 = tf.reduce_mean(total_loss)
+        # cross_entropy1 = tf.reduce_mean(total_loss)
         confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(output, axis=1), num_classes=7)
-
-    # set up training and saving functionality
+        # set up training and saving functionality
         global_step_tensor = tf.get_variable('global_step', trainable=False, shape=[], initializer=tf.zeros_initializer)
         optimizer = tf.train.AdamOptimizer()
         train_op = optimizer.minimize(total_loss, global_step=global_step_tensor)
         saver = tf.train.Saver()
-
         with tf.Session() as session:
             session.run(tf.global_variables_initializer())
-        # run training
+            # run training
             batch_size = FLAGS.batch_size
             lossControl = []
             training_avgs = []
-            for epoch in range(FLAGS.max_epoch_num):
+            epoch = -1
+            eLogic = True
+            while (eLogic == True and epoch <= FLAGS.max_epoch_num):
+                epoch += 1
+                #for epoch in range(FLAGS.max_epoch_num):
                 print('Epoch: ' + str(epoch))
                 # run gradient steps and report mean loss on train data
                 ce_vals = []
@@ -95,31 +90,31 @@ def main(argv):
                     conf_mxs_v.append(conf_matrix_v)
                 avg_test_cev = sum(ce_vals_v) / len(ce_vals_v)
                 print('VALIDATION CROSS ENTROPY: ' + str(avg_test_cev))
-                lossControl.append (avg_test_cev)
-                if epoch > 7 :
-                    if (np.average(lossControl)+0.5*np.std(lossControl) < avg_test_cev):
-                        print('Early stopping happens at ' + str(epoch))
-                        print('the average+1std is: '+str(( np.average(lossControl)+np.std(lossControl))))
-                        #path_prefix = saver.save(
-                        #   session,
-                        #   os.path.join(FLAGS.save_dir, argv[1], 'homework_1'),
-                        #   global_step=global_step_tensor
-                        #)
-                        #saver = tf.train.import_meta_graph(path_prefix + '.meta')
-                        break
+                earlyStoppingParam = 5
+                if epoch > earlyStoppingParam :
+                    if len(lossControl) > earlyStoppingParam :
+                        lossControl.pop(0)
+                        lossControl.append(avg_test_cev)
+                        if (np.average(lossControl)+0.1*np.std(lossControl) < avg_test_cev):
+                            print('Early stopping happens at ' + str(epoch))
+                            print('the average+1std is: '+str(( np.average(lossControl)+np.std(lossControl))))
+                            path_prefix = saver.save(
+                            session,
+                            os.path.join(FLAGS.save_dir, argv[1], 'homework_1'),
+                            global_step=global_step_tensor
+                            )
+                            saver = tf.train.import_meta_graph(path_prefix + '.meta')
+                            eLogic = False
+                    else :
+                        lossControl.append(avg_test_cev)
                 print('VALIDATION CONFUSION MATRIX:')
                 confusion_sum = sum(conf_mxs_v)
                 print(str(confusion_sum))
-
-            #np.save(os.path.join(FLAGS.save_dir, argv[1], 'conf-matrix'), confusion_sum)
-            #np.save(os.path.join(FLAGS.save_dir, argv[1], 'train'),
-            #       training_avgs)
-            #np.save(os.path.join(FLAGS.save_dir, argv[1], 'validation'), lossControl)
-
-        Best_set[i] =  avg_test_cev
-
+                print(j)
+            Best_set[j] =  avg_test_cev
+            print(Best_set)
+            print('I am here!')
     Index = np.argmin (Best_set)
-
     train_images = np.load(FLAGS.data_dir + train_images_name[Index])
     train_labels = np.load(FLAGS.data_dir + train_labels_label[Index])
     test_images = np.load(FLAGS.data_dir + test_images_name[Index])
@@ -128,7 +123,6 @@ def main(argv):
     train_num_examples = train_images.shape[0]
     train_images = np.reshape(train_images,[-1,129,129,1])
     test_images = np.reshape(test_images,[-1,129,129,1])
-
     input_placeholder = tf.placeholder(tf.float32, [None, 16641],
             name='input_placeholder')
     input_placeholder = tf.reshape(input_placeholder,[-1,129,129,1])
@@ -163,7 +157,11 @@ def main(argv):
         batch_size = FLAGS.batch_size
         lossControl = []
         training_avgs = []
-        for epoch in range(FLAGS.max_epoch_num):
+        epoch = -1
+        eLogic = True
+        while (eLogic == True and epoch <= FLAGS.max_epoch_num):
+        #for epoch in range(FLAGS.max_epoch_num):
+            epoch +=1
             print('Epoch: ' + str(epoch))
             # run gradient steps and report mean loss on train data
             ce_vals = []
@@ -192,7 +190,7 @@ def main(argv):
                 if len(lossControl) > earlyStoppingParam :
                     lossControl.pop(0)
                     lossControl.append(avg_test_cev)
-                    if (np.average(lossControl)+0.5*np.std(lossControl) < avg_test_cev):
+                    if (np.average(lossControl)+0.1*np.std(lossControl) < avg_test_cev):
                         print('Early stopping happens at ' + str(epoch))
                         print('the average+1std is: '+str(( np.average(lossControl)+np.std(lossControl))))
                         path_prefix = saver.save(
@@ -201,7 +199,7 @@ def main(argv):
                             global_step=global_step_tensor
                         )
                         saver = tf.train.import_meta_graph(path_prefix + '.meta')
-                        break
+                        eLogic = False
                 else :
                     lossControl.append(avg_test_cev)
 
