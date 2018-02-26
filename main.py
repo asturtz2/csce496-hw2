@@ -30,9 +30,9 @@ MODELS = { 'model-1' : model_conv_2 }
 def load_data(files):
     load = lambda f: np.load(FLAGS.data_dir + f)
     train_data = reshape(load(files[0]))
-    train_labels = reshape(load(files[1]))
+    train_labels = load(files[1])
     test_data = reshape(load(files[2]))
-    test_labels = reshape(load(files[3]))
+    test_labels = load(files[3])
     return (train_data, train_labels), (test_data, test_labels)
 
 def save(file_name, model_name, data):
