@@ -1,4 +1,9 @@
-import tensorflow as tf import numpy as np import itertools import os import util from model import *
+import tensorflow as tf
+import numpy as np
+import itertools
+import os
+import util
+from model import *
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/EMODB-German/', 'directory where FMNIST is located')
@@ -96,7 +101,7 @@ def main(argv):
     inputs, outputs, y = init_graph(MODELS[model_name], reg_coefficient)
     total_loss = loss(inputs, outputs, y, reg_coefficient)
     global_step, train_op = minimize_loss(inputs, outputs, y, reg_coefficient, total_loss)
-    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(output, axis=1), num_classes=7)
+    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(outputs, axis=1), num_classes=7)
     saver = tf.train.Saver()
 
     for files in FILES:
