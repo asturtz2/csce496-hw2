@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 import os
 import util
-import model
+from model import *
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/EMODB-German/', 'directory where FMNIST is located')
@@ -18,7 +18,7 @@ FILES = [ ('train_x_1.npy', 'train_y_1.npy', 'test_x_1.npy', 'test_y_1.npy')
         , ('train_x_4.npy', 'train_y_4.npy', 'test_x_4.npy', 'test_y_4.npy')
         ]
 
-MODELS = { 'model-1' : model.model_conv_2 }
+MODELS = { 'model-1' : model_conv_2 }
 
 # train_images_name = ['train_x_1.npy','train_x_2.npy','train_x_3.npy','train_x_4.npy']
 # train_labels_label = ['train_y_1.npy','train_y_2.npy','train_y_3.npy','train_y_4.npy']
@@ -38,12 +38,13 @@ def load_data(files):
 def save(file_name, model_name, data):
     np.save(os.path.join(FLAGS.save_dir, model_name, file_name), data)
 
-def reshape(tensor):
-    return np.reshape(tensor, [-1,129,129,1])
+def reshape(arr):
+    return np.reshape(arr, [-1,129,129,1])
 
 def init_graph(model, reg):
-    input_placeholder = reshape(
-        tf.placeholder(tf.float32, [None, 16641], name='input_placeholder')
+    input_placeholder = tf.reshape(
+        tf.placeholder(tf.float32, [None, 16641], name='input_placeholder'),
+        [-1,129,129,1]
     )
     output = tf.identity(model(input_placeholder), name='output')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
@@ -63,7 +64,7 @@ def minimize_loss(inputs, outputs, labels, reg, total_loss):
 def loss(inputs, outputs, labels, reg):
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=labels)
     reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    return tf.reduce_mean(cross_entropy(outputs, labels) + reg * sum(reg_losses))
+    return tf.reduce_mean(cross_entropy + reg * sum(reg_losses))
 
 def batch(data, index):
     return data[index*FLAGS.batch_size:(index+1)*FLAGS.batch_size, :]
