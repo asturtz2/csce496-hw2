@@ -1,9 +1,4 @@
-import tensorflow as tf
-import numpy as np
-import itertools
-import os
-import util
-from model import *
+import tensorflow as tf import numpy as np import itertools import os import util from model import *
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/EMODB-German/', 'directory where FMNIST is located')
@@ -96,7 +91,7 @@ def test(data, confusion_matrix_op, total_loss, session):
 
 def main(argv):
     model_name = argv[1]
-    reg_coefficient = argv[2]
+    reg_coefficient = float(argv[2])
 
     inputs, outputs, y = init_graph(MODELS[model_name], reg_coefficient)
     total_loss = loss(inputs, outputs, y, reg_coefficient)
