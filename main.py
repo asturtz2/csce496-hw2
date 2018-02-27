@@ -1,13 +1,13 @@
+#!/usr/bin/env python3
 import tensorflow as tf
 import numpy as np
-import itertools
 import os
 import util
 from model import *
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/EMODB-German/', 'directory where FMNIST is located')
-flags.DEFINE_string('save_dir', '/work/cse496dl/ebrahim31', 'directory where model graph and weights are saved')
+flags.DEFINE_string('data_dir', '/home/alex/school/csce-496/hw2-data/02/EMODB-German/', 'directory where FMNIST is located')
+flags.DEFINE_string('save_dir', '/home/alex/school/csce-496/hw2-results/', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
 FLAGS = flags.FLAGS
@@ -69,24 +69,26 @@ def loss(inputs, outputs, labels, reg):
 def batch(data, index):
     return data[index*FLAGS.batch_size:(index+1)*FLAGS.batch_size, :]
 
-def train(data, train_op, total_loss, session):
+def train(data, inputs, y, train_op, total_loss, session):
     ce_vals = []
-    for i in range(data.shape[0] // FLAGS.batch_size):
+    train_data, labels = data
+    for i in range(train_data.shape[0] // FLAGS.batch_size):
         batch_xs = batch(data[0], i)
         batch_ys = batch(data[1], i)
-        _, train_ce = session.run([train_op, total_loss], {input_placeholder: batch_xs, y: batch_ys})
+        _, train_ce = session.run([train_op, total_loss], {inputs: batch_xs, y: batch_ys})
         ce_vals.append(train_ce)
 
     avg_train_ce = sum(ce_vals) / len(ce_vals)
     return avg_train_ce, ce_vals
 
-def test(data, confusion_matrix_op, total_loss, session):
+def test(data, inputs, y, confusion_matrix_op, total_loss, session):
     ce_vals_v = []
     conf_mxs_v = []
-    for i in range(data.shape[0] // FLAGS.batch_size):
+    test_data, labels = data
+    for i in range(test_data.shape[0] // FLAGS.batch_size):
         batch_xsv = batch(data[0], i)
         batch_ysv = batch(data[1], i)
-        test_cev, conf_matrix_v, _ = session.run([total_loss, confusion_matrix_op], {input_placeholder: batch_xsv, y: batch_ysv})
+        test_cev, conf_matrix_v, _ = session.run([total_loss, confusion_matrix_op], {inputs: batch_xsv, y: batch_ysv})
         ce_vals_v.append(test_cev)
         conf_mxs_v.append(conf_matrix_v)
     avg_test_cev = sum(ce_vals_v) / len(ce_vals_v)
@@ -112,8 +114,8 @@ def main(argv):
             session.run(tf.global_variables_initializer())
             ce_vals = ([], [])
             best_test_ce = 0
-            for epoch in range(50):
-                avg_train_ce, _ = train(train_data, train_op, total_loss, session)
+            for epoch in range(1):
+                avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
                 avg_test_cev, confusion_sum = test(test_data, confusion_matrix_op, total_loss, session)
                 ce_vals[0].append(avg_train_ce)
                 ce_vals[1].append(avg_test_cev)
