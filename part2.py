@@ -6,7 +6,7 @@ import util
 from model import *
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/EMODB-German/', 'directory where FMNIST is located')
+flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/SAVEE-British', 'directory where FMNIST is located')
 flags.DEFINE_string('save_dir', '/work/cse496dl/asturtz', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
@@ -116,7 +116,7 @@ def main(argv):
             best_test_ce = 0
             for epoch in range(1):
                 avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
-                avg_test_cev, confusion_sum = test(test_data, inputs, y, confusion_matrix_op, total_loss, session)
+                avg_test_cev, confusion_sum = test(test_data, confusion_matrix_op, total_loss, session)
                 ce_vals[0].append(avg_train_ce)
                 ce_vals[1].append(avg_test_cev)
 
@@ -132,7 +132,7 @@ def main(argv):
                 save('validation', model_name, ce_vals[1])
                 saver.save(
                     session,
-                    os.path.join(FLAGS.save_dir, argv[1], 'emodb_homework_2'),
+                    os.path.join(FLAGS.save_dir, argv[1], 'savee_homework_2'),
                     global_step=global_step
                 )
 
