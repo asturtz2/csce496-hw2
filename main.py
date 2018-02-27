@@ -18,7 +18,9 @@ FILES = [ ('train_x_1.npy', 'train_y_1.npy', 'test_x_1.npy', 'test_y_1.npy')
         , ('train_x_4.npy', 'train_y_4.npy', 'test_x_4.npy', 'test_y_4.npy')
         ]
 
-MODELS = { 'model-1' : model_conv_2 }
+MODELS = { 'model-1' : model_conv_2
+         , 'model-2' : model_conv_3
+         }
 
 # train_images_name = ['train_x_1.npy','train_x_2.npy','train_x_3.npy','train_x_4.npy']
 # train_labels_label = ['train_y_1.npy','train_y_2.npy','train_y_3.npy','train_y_4.npy']
