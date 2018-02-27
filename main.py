@@ -116,7 +116,7 @@ def main(argv):
             best_test_ce = 0
             for epoch in range(1):
                 avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
-                avg_test_cev, confusion_sum = test(test_data, confusion_matrix_op, total_loss, session)
+                avg_test_cev, confusion_sum = test(test_data, inputs, y, confusion_matrix_op, total_loss, session)
                 ce_vals[0].append(avg_train_ce)
                 ce_vals[1].append(avg_test_cev)
 
