@@ -114,7 +114,7 @@ def main(argv):
             session.run(tf.global_variables_initializer())
             ce_vals = ([], [])
             best_test_ce = 0
-            for epoch in range(1):
+            for epoch in range(50):
                 avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
                 avg_test_cev, confusion_sum = test(test_data, inputs, y, confusion_matrix_op, total_loss, session)
                 ce_vals[0].append(avg_train_ce)
@@ -132,7 +132,7 @@ def main(argv):
                 save('validation', model_name, ce_vals[1])
                 saver.save(
                     session,
-                    os.path.join(FLAGS.save_dir, argv[1], 'homework_1'),
+                    os.path.join(FLAGS.save_dir, argv[1], 'emodb_homework_2'),
                     global_step=global_step
                 )
 
