@@ -7,7 +7,7 @@ from model import *
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/SAVEE-British/', 'directory where FMNIST is located')
-flags.DEFINE_string('save_dir', '/work/cse496dl/asturtz', 'directory where model graph and weights are saved')
+flags.DEFINE_string('save_dir', '/home/alex/model-3/emodb-model-3', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
 FLAGS = flags.FLAGS
@@ -104,12 +104,12 @@ def main(argv):
     saver = tf.train.import_meta_graph(FLAGS.save_dir + '/emodb_homework_2-0.meta')
     saver.restore(session, FLAGS.save_dir + '/emodb_homework_2-0')
     graph = session.graph
+    print(graph.get_operations())
     x = graph.get_tensor_by_name('input_placeholder:0')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
-    hidden_1 = graph.get_tensor_by_name('Conv_model/dense_1/Relu:0')
     dense_out = tf.identity(graph.get_tensor_by_name('Conv_model/dense_2/Relu:0', 'output2'))
-    reg = reg_coefficient * (tf.nn.l2_loss(hidden) + tf.nn.l2_loss(hidden_1) + tf.nn.l2_loss(dense_out))
+    reg = reg_coefficient * (tf.nn.l2_loss(hidden) + tf.nn.l2_loss(dense_out))
 
     confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(dense_out, axis=1), num_classes=7)
     total_loss = loss(x, dense_out, y, reg)
@@ -118,7 +118,6 @@ def main(argv):
     optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
     "optimizer")
     hidden_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
-    hidden_1_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_1/Relu')
     output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
 
 
@@ -150,7 +149,7 @@ def main(argv):
                 os.path.join(FLAGS.save_dir, model_name + 'savee', 'savee_homework_2'),
                 global_step=0
             )
-    # train_op = minimize_loss(x, new_output, y,
+    train_op = minimize_loss(x, new_output, y,
 
 
 
