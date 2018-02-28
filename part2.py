@@ -126,7 +126,7 @@ def main(argv):
         session.run(tf.variables_initializer(optimizer_vars + output_vars + hidden_vars, name='init'))
         ce_vals = ([], [])
         best_test_ce = float('inf')
-        for epoch in range(15):
+        for epoch in range(50):
             avg_train_ce, _ = train(train_data, x, y, train_op, total_loss, session)
             avg_test_cev, confusion_sum = test(test_data, x, y, confusion_matrix_op, total_loss, session)
             ce_vals[0].append(avg_train_ce)
