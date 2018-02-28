@@ -59,7 +59,6 @@ def minimize_loss(total_loss):
         hidden_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
         hidden_dense_1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_1/Relu')
         output_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_2/Relu')
-        train_vars = hidden.append(output)
         return optimizer.minimize(total_loss, var_list=output_dense, name='Adam_transfer')
 
 def loss(inputs, outputs, labels, reg):
