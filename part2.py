@@ -6,7 +6,7 @@ import util
 from model import *
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '/home/alex/model-1/', 'directory where FMNIST is located')
+flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/SAVEE-British/', 'directory where FMNIST is located')
 flags.DEFINE_string('save_dir', '/work/cse496dl/asturtz', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
@@ -101,8 +101,8 @@ def main(argv):
     model_name = argv[1]
     reg_coefficient = float(argv[2])
     session = tf.Session()
-    saver = tf.train.import_meta_graph(FLAGS.save_dir + 'emodb_homework_2-0.meta')
-    saver.restore(session, FLAGS.save_dir + 'emodb_homework_2-0')
+    saver = tf.train.import_meta_graph(FLAGS.save_dir + '/emodb_homework_2-0.meta')
+    saver.restore(session, FLAGS.save_dir + '/emodb_homework_2-0')
     graph = session.graph
     x = graph.get_tensor_by_name('input_placeholder:0')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
