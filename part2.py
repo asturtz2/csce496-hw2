@@ -106,7 +106,7 @@ def main(argv):
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
     dense_out = tf.stop_gradient(hidden)
-    new_hidden = tf.layers.dense(dense_out, 64)
+    new_hidden = tf.layers.dense(dense_out, 64, name='new_hidden')
     new_output = tf.layers.dense(new_hidden, 7, name='output2')
     reg = reg_coefficient * tf.nn.l2_loss(new_output) + tf.nn.l2_loss(new_hidden)
 
@@ -114,8 +114,8 @@ def main(argv):
     total_loss = loss(x, new_output, y, reg)
     train_op = minimize_loss(total_loss)
 
-    optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
-    "optimizer")
+    optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, "optimizer")
+    hidden_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'new_hidden')
     output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
 
 
@@ -123,7 +123,7 @@ def main(argv):
         print('This is start')
         print(files[0])
         train_data, test_data = load_data(files)
-        session.run(tf.variables_initializer(optimizer_vars + output_vars, name='init'))
+        session.run(tf.variables_initializer(optimizer_vars + output_vars + hidden_vars, name='init'))
         ce_vals = ([], [])
         best_test_ce = float('inf')
         for epoch in range(15):
