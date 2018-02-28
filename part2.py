@@ -108,7 +108,7 @@ def main(argv):
     dense_out = tf.stop_gradient(hidden)
     new_hidden = tf.layers.dense(dense_out, 64)
     new_output = tf.layers.dense(new_hidden, 7, name='output2')
-    reg = reg_coefficient * (tf.nn.l2_loss(new_output) + tf.nn.l2_loss(new_hidden)
+    reg = reg_coefficient * tf.nn.l2_loss(new_output) + tf.nn.l2_loss(new_hidden)
 
     confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(new_output, axis=1), num_classes=7)
     total_loss = loss(x, new_output, y, reg)
