@@ -56,11 +56,11 @@ def init_graph(model, reg):
 def minimize_loss(total_loss):
     with tf.name_scope('optimizer') as scope:
         optimizer = tf.train.AdamOptimizer()
-        hidden = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense')
-        hidden_1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_1')
-        output = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
+        hidden_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
+        hidden_dense_1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_1/Relu')
+        output_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_2/Relu')
         train_vars = hidden.append(output)
-        return optimizer.minimize(total_loss, var_list=train_vars, name='Adam_transfer')
+        return optimizer.minimize(total_loss, var_list=output_dense, name='Adam_transfer')
 
 def loss(inputs, outputs, labels, reg):
     with tf.name_scope('optimizer') as scope:
@@ -117,15 +117,14 @@ def main(argv):
 
     optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
     "optimizer")
-    hidden_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
-    output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
+    output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_2/Relu')
 
 
     for files in FILES:
         print('This is start')
         print(files[0])
         train_data, test_data = load_data(files)
-        session.run(tf.variables_initializer(optimizer_vars + hidden_vars + output_vars, name='init'))
+        session.run(tf.variables_initializer(optimizer_vars + output_vars, name='init'))
         ce_vals = ([], [])
         best_test_ce = float('inf')
         for epoch in range(15):
