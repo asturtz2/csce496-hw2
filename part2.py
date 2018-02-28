@@ -56,10 +56,8 @@ def init_graph(model, reg):
 def minimize_loss(total_loss):
     with tf.name_scope('optimizer') as scope:
         optimizer = tf.train.AdamOptimizer()
-        hidden_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
-        hidden_dense_1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_1/Relu')
-        output_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_2/Relu')
-        return optimizer.minimize(total_loss, var_list=output_dense, name='Adam_transfer')
+        output_dense = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
+        return optimizer.minimize(total_loss)
 
 def loss(inputs, outputs, labels, reg):
     with tf.name_scope('optimizer') as scope:
@@ -107,16 +105,17 @@ def main(argv):
     x = graph.get_tensor_by_name('input_placeholder:0')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
-    dense_out = tf.identity(graph.get_tensor_by_name('Conv_model/dense_2/Relu:0'), 'output2')
-    reg = reg_coefficient * (tf.nn.l2_loss(hidden) + tf.nn.l2_loss(dense_out))
+    dense_out = tf.stop_gradient(hidden)
+    new_output = tf.layers.dense(dense_out, 7, name='output2')
+    reg = reg_coefficient * tf.nn.l2_loss(new_output)
 
     confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(dense_out, axis=1), num_classes=7)
-    total_loss = loss(x, dense_out, y, reg)
+    total_loss = loss(x, new_output, y, reg)
     train_op = minimize_loss(total_loss)
 
     optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
     "optimizer")
-    output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense_2/Relu')
+    output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
 
 
     for files in FILES:
