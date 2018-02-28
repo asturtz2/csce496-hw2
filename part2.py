@@ -108,7 +108,7 @@ def main(argv):
     x = graph.get_tensor_by_name('input_placeholder:0')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
-    dense_out = tf.identity(graph.get_tensor_by_name('Conv_model/dense_2/Relu:0', 'output2'))
+    dense_out = tf.identity(graph.get_tensor_by_name('Conv_model/dense_2/Relu:0'), 'output2')
     reg = reg_coefficient * (tf.nn.l2_loss(hidden) + tf.nn.l2_loss(dense_out))
 
     confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(dense_out, axis=1), num_classes=7)
