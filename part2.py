@@ -6,7 +6,7 @@ import util
 from model import *
 
 flags = tf.app.flags
-flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/SAVEE-British/', 'directory where FMNIST is located')
+flags.DEFINE_string('data_dir', '/home/alex/model-1/', 'directory where FMNIST is located')
 flags.DEFINE_string('save_dir', '/work/cse496dl/asturtz', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
@@ -51,20 +51,18 @@ def init_graph(model, reg):
 
     return input_placeholder, output, y
 
-def minimize_loss(inputs, outputs, labels, reg, total_loss):
-    global_step = tf.get_variable(
-        'global_step',
-        trainable=False,
-        shape=[],
-        initializer=tf.zeros_initializer
-    )
-    optimizer = tf.train.AdamOptimizer()
-    return global_step, optimizer.minimize(total_loss, global_step=global_step)
+def minimize_loss(total_loss):
+    with tf.name_scope('optimizer') as scope:
+        optimizer = tf.train.AdamOptimizer()
+        hidden = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
+        output = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
+        train_vars = hidden.append(output)
+        return optimizer.minimize(total_loss, var_list=train_vars)
 
 def loss(inputs, outputs, labels, reg):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=labels)
-    reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    return tf.reduce_mean(cross_entropy + reg * sum(reg_losses))
+    with tf.name_scope('optimizer') as scope:
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=outputs, labels=labels)
+        return cross_entropy + reg
 
 def batch(data, index):
     return data[index*FLAGS.batch_size:(index+1)*FLAGS.batch_size, :]
@@ -99,42 +97,93 @@ def test(data, inputs, y, confusion_matrix_op, total_loss, session):
 def main(argv):
     model_name = argv[1]
     reg_coefficient = float(argv[2])
+    session = tf.Session()
+    saver = tf.train.import_meta_graph(FLAGS.data_dir + 'emodb_homework_2-0.meta')
+    saver.restore(session, FLAGS.data_dir + 'emodb_homework_2-0')
+    graph = session.graph
+    x = graph.get_tensor_by_name('input_placeholder:0')
+    y = tf.placeholder(tf.float32, [None, 7], name='label')
+    hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
+    dense_out = tf.identity(graph.get_tensor_by_name('Conv_model/dense_1/Relu:0', 'output2'))
+    reg = reg_coefficient * (tf.nn.l2_loss(hidden) + tf.nn.l2_loss(dense_out))
 
-    inputs, outputs, y = init_graph(MODELS[model_name], reg_coefficient)
-    total_loss = loss(inputs, outputs, y, reg_coefficient)
-    global_step, train_op = minimize_loss(inputs, outputs, y, reg_coefficient, total_loss)
-    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(outputs, axis=1), num_classes=7)
-    saver = tf.train.Saver()
+    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(dense_out, axis=1), num_classes=7)
+    total_loss = loss(x, dense_out, y, reg)
+    train_op = minimize_loss(total_loss)
+
+    optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+    "optimizer")
+    hidden_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'Conv_model/dense/Relu')
+    output_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'output2')
+
 
     for files in FILES:
         print('This is start')
         print(files[0])
         train_data, test_data = load_data(files)
-        with tf.Session() as session:
-            session.run(tf.global_variables_initializer())
-            ce_vals = ([], [])
-            best_test_ce = 0
-            for epoch in range(1):
-                avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
-                avg_test_cev, confusion_sum = test(test_data, confusion_matrix_op, total_loss, session)
-                ce_vals[0].append(avg_train_ce)
-                ce_vals[1].append(avg_test_cev)
+        session.run(tf.variables_initializer(optimizer_vars + hidden_vars + output_vars, name='init'))
+        ce_vals = ([], [])
+        best_test_ce = float('inf')
+        for epoch in range(15):
+            avg_train_ce, _ = train(train_data, x, y, train_op, total_loss, session)
+            avg_test_cev, confusion_sum = test(test_data, x, y, confusion_matrix_op, total_loss, session)
+            ce_vals[0].append(avg_train_ce)
+            ce_vals[1].append(avg_test_cev)
 
-                print('TRAIN CROSS ENTROPY: ' + str(avg_train_ce))
-                print('VALIDATION CROSS ENTROPY: ' + str(avg_test_cev))
-                print('VALIDATION CONFUSION MATRIX:')
-                print(str(confusion_sum))
+            print('TRAIN CROSS ENTROPY: ' + str(avg_train_ce))
+            print('VALIDATION CROSS ENTROPY: ' + str(avg_test_cev))
+            print('VALIDATION CONFUSION MATRIX:')
+            print(str(confusion_sum))
 
-            if avg_test_cev < best_test_ce:
-                best_test_ce = avg_test_cev
-                save('conf-matrix', model_name, confusion_sum)
-                save('train', model_name, ce_vals[0])
-                save('validation', model_name, ce_vals[1])
-                saver.save(
-                    session,
-                    os.path.join(FLAGS.save_dir, argv[1], 'savee_homework_2'),
-                    global_step=global_step
-                )
+        if avg_test_cev < best_test_ce:
+            best_test_ce = avg_test_cev
+            save('conf-matrix', model_name + '-savee', confusion_sum)
+            save('train', model_name + '-savee', ce_vals[0])
+            save('validation', model_name + '-savee', ce_vals[1])
+            saver.save(
+                session,
+                os.path.join(FLAGS.save_dir, model_name + 'savee', 'savee_homework_2'),
+                global_step=0
+            )
+    # train_op = minimize_loss(x, new_output, y,
+
+
+
+    # inputs, outputs, y = init_graph(MODELS[model_name], reg_coefficient)
+    # total_loss = loss(inputs, outputs, y, reg_coefficient)
+    # global_step, train_op = minimize_loss(inputs, outputs, y, reg_coefficient, total_loss)
+    # confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(outputs, axis=1), num_classes=7)
+    # saver = tf.train.Saver()
+
+    # for files in FILES:
+    #     print('This is start')
+    #     print(files[0])
+    #     train_data, test_data = load_data(files)
+    #     with tf.Session() as session:
+    #         session.run(tf.global_variables_initializer())
+    #         ce_vals = ([], [])
+    #         best_test_ce = 0
+    #         for epoch in range(1):
+    #             avg_train_ce, _ = train(train_data, inputs, y, train_op, total_loss, session)
+    #             avg_test_cev, confusion_sum = test(test_data, confusion_matrix_op, total_loss, session)
+    #             ce_vals[0].append(avg_train_ce)
+    #             ce_vals[1].append(avg_test_cev)
+
+    #             print('TRAIN CROSS ENTROPY: ' + str(avg_train_ce))
+    #             print('VALIDATION CROSS ENTROPY: ' + str(avg_test_cev))
+    #             print('VALIDATION CONFUSION MATRIX:')
+    #             print(str(confusion_sum))
+
+    #         if avg_test_cev < best_test_ce:
+    #             best_test_ce = avg_test_cev
+    #             save('conf-matrix', model_name, confusion_sum)
+    #             save('train', model_name, ce_vals[0])
+    #             save('validation', model_name, ce_vals[1])
+    #             saver.save(
+    #                 session,
+    #                 os.path.join(FLAGS.save_dir, argv[1], 'savee_homework_2'),
+    #                 global_step=global_step
+    #             )
 
 if __name__ == "__main__":
     tf.app.run()
