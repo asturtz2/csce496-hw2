@@ -102,7 +102,7 @@ def main(argv):
     saver.restore(session, FLAGS.save_dir + '/emodb_homework_2-0')
     graph = session.graph
     print(graph.get_operations())
-    x = graph.get_tensor_by_name('input_placeholder:0')
+    x = tf.reshape(graph.get_tensor_by_name('input_placeholder:0'), [-1, 129,129,1])
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
     dense_out = tf.stop_gradient(hidden)
