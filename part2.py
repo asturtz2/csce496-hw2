@@ -62,7 +62,7 @@ def minimize_loss(total_loss):
 def loss(inputs, outputs, labels, reg):
     with tf.name_scope('optimizer') as scope:
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=outputs, labels=labels)
-        return cross_entropy + reg
+        return tf.reduce_mean(cross_entropy + reg)
 
 def batch(data, index):
     return data[index*FLAGS.batch_size:(index+1)*FLAGS.batch_size, :]
