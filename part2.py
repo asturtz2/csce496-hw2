@@ -86,7 +86,7 @@ def test(data, inputs, y, confusion_matrix_op, total_loss, session):
     for i in range(test_data.shape[0] // FLAGS.batch_size):
         batch_xsv = batch(data[0], i)
         batch_ysv = batch(data[1], i)
-        test_cev, conf_matrix_v, _ = session.run([total_loss, confusion_matrix_op], {inputs: batch_xsv, y: batch_ysv})
+        test_cev, conf_matrix_v  = session.run([total_loss, confusion_matrix_op], {inputs: batch_xsv, y: batch_ysv})
         ce_vals_v.append(test_cev)
         conf_mxs_v.append(conf_matrix_v)
     avg_test_cev = sum(ce_vals_v) / len(ce_vals_v)
