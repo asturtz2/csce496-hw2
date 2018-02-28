@@ -31,9 +31,9 @@ MODELS = { 'model-2' : model_conv_2
 
 def load_data(files):
     load = lambda f: np.load(FLAGS.data_dir + f)
-    train_data = reshape(load(files[0]))
+    train_data = load(files[0])
     train_labels = load(files[1])
-    test_data = reshape(load(files[2]))
+    test_data = load(files[2])
     test_labels = load(files[3])
     return (train_data, train_labels), (test_data, test_labels)
 
@@ -102,7 +102,7 @@ def main(argv):
     saver.restore(session, FLAGS.save_dir + '/emodb_homework_2-0')
     graph = session.graph
     print(graph.get_operations())
-    x = tf.reshape(graph.get_tensor_by_name('input_placeholder:0'), [None, 16641])
+    x = graph.get_tensor_by_name('input_placeholder:0')
     y = tf.placeholder(tf.float32, [None, 7], name='label')
     hidden = graph.get_tensor_by_name('Conv_model/dense/Relu:0')
     dense_out = tf.stop_gradient(hidden)
