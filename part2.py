@@ -109,7 +109,7 @@ def main(argv):
     new_output = tf.layers.dense(dense_out, 7, name='output2')
     reg = reg_coefficient * tf.nn.l2_loss(new_output)
 
-    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(dense_out, axis=1), num_classes=7)
+    confusion_matrix_op = tf.confusion_matrix(tf.argmax(y, axis=1), tf.argmax(new_output, axis=1), num_classes=7)
     total_loss = loss(x, new_output, y, reg)
     train_op = minimize_loss(total_loss)
 
