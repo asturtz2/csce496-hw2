@@ -7,7 +7,7 @@ from model import *
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '/work/cse496dl/shared/homework/02/SAVEE-British/', 'directory where FMNIST is located')
-flags.DEFINE_string('save_dir', '/home/alex/model-3/emodb-model-3', 'directory where model graph and weights are saved')
+flags.DEFINE_string('save_dir', '/work/cse496dl/asturtz', 'directory where model graph and weights are saved')
 flags.DEFINE_integer('batch_size', 32, '')
 flags.DEFINE_integer('max_epoch_num', 200, '')
 FLAGS = flags.FLAGS
