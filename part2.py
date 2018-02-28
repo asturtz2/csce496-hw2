@@ -149,8 +149,6 @@ def main(argv):
                 os.path.join(FLAGS.save_dir, model_name + 'savee', 'savee_homework_2'),
                 global_step=0
             )
-    train_op = minimize_loss(x, new_output, y,
-
 
 
     # inputs, outputs, y = init_graph(MODELS[model_name], reg_coefficient)
