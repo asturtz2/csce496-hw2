@@ -1,1 +1,1 @@
-# csce496-hw2
+Within this project, we applied 2D convolutional neural networks to the problem of emotion classification of short (3–5 seconds) utterances from the EMODB. The emotion data are initially processed and converted to spectrograms.
